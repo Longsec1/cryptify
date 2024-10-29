@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cryptify - Password Generator</title>
+  <title>LockForge - Password Generator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,7 +26,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       text-align: center;
       width: 300px;
-      max-width: 90%; /* For mobile compatibility */
+      max-width: 90%;
     }
     .output {
       font-size: 1.2em;
@@ -57,15 +57,41 @@
     button:hover {
       background-color: #005bb5;
     }
+    .history-container {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 20px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+      text-align: left;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .history-item span {
+      flex-grow: 1;
+      padding-right: 10px;
+      word-break: break-all;
+    }
+    .strength-indicator {
+      font-weight: bold;
+      color: #ff0000; /* Default to red for weak */
+    }
   </style>
 </head>
 <body>
 
-  <h1>Cryptify</h1>
+  <h1>LockForge</h1>
   <div class="container">
     <p>Generate a strong password instantly!</p>
 
     <div class="output" id="password-output">Your secure password</div>
+    <div class="strength-indicator" id="strength-indicator">Strength: Weak</div>
 
     <div class="controls">
       <label>
@@ -84,9 +110,24 @@
         <input type="checkbox" id="include-symbols" checked>
         Include Symbols
       </label>
+      <label>
+        Custom Characters:
+        <input type="text" id="custom-charset" placeholder="Optional custom characters">
+      </label>
+      <label>
+        <input type="checkbox" id="toggle-visibility" onclick="togglePasswordVisibility()">
+        Show Password
+      </label>
     </div>
 
     <button onclick="generatePassword()">Generate Password</button>
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button onclick="exportHistory()">Export History</button>
+
+    <div class="history-container" id="history-container">
+      <h3>Password History</h3>
+      <div id="history-list"></div>
+    </div>
   </div>
 
   <script>
@@ -95,13 +136,14 @@
       const includeUppercase = document.getElementById('include-uppercase').checked;
       const includeNumbers = document.getElementById('include-numbers').checked;
       const includeSymbols = document.getElementById('include-symbols').checked;
+      const customCharset = document.getElementById('custom-charset').value;
 
       const lowercase = 'abcdefghijklmnopqrstuvwxyz';
       const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
       const numbers = '0123456789';
       const symbols = '!@#$%^&*()_+[]{}|;:,.<>?';
 
-      let charset = lowercase;
+      let charset = customCharset || lowercase;
       if (includeUppercase) charset += uppercase;
       if (includeNumbers) charset += numbers;
       if (includeSymbols) charset += symbols;
@@ -112,7 +154,90 @@
       }
 
       document.getElementById('password-output').textContent = password;
+      evaluateStrength(password);
+      updateHistory(password);
+      saveHistory();
     }
+
+    function evaluateStrength(password) {
+      const strengthIndicator = document.getElementById('strength-indicator');
+      let strength = "Weak";
+      let color = "#ff0000"; // red for weak
+
+      if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[!@#$%^&*()_+[\]{}|;:,.<>?]/.test(password)) {
+        strength = "Strong";
+        color = "#00b300"; // green for strong
+      } else if (password.length >= 6) {
+        strength = "Medium";
+        color = "#ffbf00"; // yellow for medium
+      }
+
+      strengthIndicator.textContent = "Strength: " + strength;
+      strengthIndicator.style.color = color;
+    }
+
+    function togglePasswordVisibility() {
+      const passwordOutput = document.getElementById('password-output');
+      const isVisible = document.getElementById('toggle-visibility').checked;
+      passwordOutput.style.textSecurity = isVisible ? 'none' : 'disc';
+    }
+
+    function copyToClipboard() {
+      const password = document.getElementById('password-output').textContent;
+      navigator.clipboard.writeText(password).then(() => alert("Password copied to clipboard!"));
+    }
+
+    function updateHistory(password) {
+      const historyList = document.getElementById('history-list');
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+
+      const passwordText = document.createElement('span');
+      passwordText.textContent = password;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.style.backgroundColor = '#e60000';
+      deleteButton.onclick = function() {
+        historyList.removeChild(historyItem);
+        saveHistory();
+      };
+
+      historyItem.appendChild(passwordText);
+      historyItem.appendChild(deleteButton);
+      historyList.appendChild(historyItem);
+    }
+
+    function exportHistory() {
+      const historyList = document.getElementById('history-list').children;
+      let data = "Password History\n";
+      for (let item of historyList) {
+        data += item.children[0].textContent + "\n";
+      }
+      const blob = new Blob([data], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'password_history.txt';
+      a.click();
+    }
+
+    function saveHistory() {
+      const history = [];
+      const historyList = document.getElementById('history-list').children;
+      for (let item of historyList) {
+        history.push(item.children[0].textContent);
+      }
+      localStorage.setItem('passwordHistory', JSON.stringify(history));
+    }
+
+    function loadHistory() {
+      const historyList = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('passwordHistory')) || [];
+      history.forEach(password => updateHistory(password));
+    }
+
+    window.onload = loadHistory;
   </script>
 </body>
-      </html>
+  </html>
