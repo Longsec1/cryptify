@@ -115,10 +115,6 @@
         Custom Characters:
         <input type="text" id="custom-charset" placeholder="Optional custom characters">
       </label>
-      <label>
-        <input type="checkbox" id="toggle-visibility" onclick="togglePasswordVisibility()">
-        Show Password
-      </label>
     </div>
 
     <button onclick="generatePassword()">Generate Password</button>
@@ -128,6 +124,10 @@
     <div class="history-container" id="history-container">
       <h3>Password History</h3>
       <div id="history-list"></div>
+    </div>
+
+    <div id="ad-container">
+      <!-- Ad placeholder -->
     </div>
   </div>
 
@@ -160,10 +160,14 @@
       saveHistory();
 
       // Display interstitial ad after generating a password
+      displayAd();
+    }
+
+    function displayAd() {
       (function(d, z, s) {
         s.src = 'https://' + d + '/401/' + z;
         try {
-          (document.body || document.documentElement).appendChild(s);
+          document.getElementById("ad-container").appendChild(s);
         } catch (e) {}
       })('teestoagloupaza.net', '8452749', document.createElement('script'));
     }
@@ -183,12 +187,6 @@
 
       strengthIndicator.textContent = "Strength: " + strength;
       strengthIndicator.style.color = color;
-    }
-
-    function togglePasswordVisibility() {
-      const passwordOutput = document.getElementById('password-output');
-      const isVisible = document.getElementById('toggle-visibility').checked;
-      passwordOutput.style.textSecurity = isVisible ? 'none' : 'disc';
     }
 
     function copyToClipboard() {
@@ -249,4 +247,4 @@
     window.onload = loadHistory;
   </script>
 </body>
-    </html>
+  </html>
